@@ -1,8 +1,9 @@
 return {
     Premiums = {
-        [3640452457] = true,
-        [10432456952] = true
+        [3640452457] = true, --Tester
+        [10432456952] = true --Dev
     }
 }
+
 
 
