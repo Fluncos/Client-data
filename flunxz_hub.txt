@@ -1,0 +1,902 @@
+local IceLibrary = loadstring(game:HttpGet("https://github.com/contateste8/IceLibraryY/raw/refs/heads/main/IceLibrary.lua"))()
+WindowSetTitle("99 Nights in the forest - by Flunx")
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local LocalPlayer = Players.LocalPlayer
+
+local ActiveEspItems = false
+local ActiveDistanceEsp = false
+local ActiveEspEnemy = false
+local ActiveEspChildren = false
+local ActiveEspPeltTrader = false
+local ActivateFly = false
+local AlrActivatedFlyPC = false
+local ActiveNoCooldownPrompt = false
+local ActiveNoFog = false
+local ActiveAutoChopTree = false
+local ActiveKillAura = false
+local ActivateInfiniteJump = false
+local ActiveNoclip = false
+local ActiveSpeedBoost = false
+
+local DistanceForKillAura = 25
+local DistanceForAutoChopTree = 25
+local LimitRangerEsp = 100
+local DisableLimitRangerEsp = false
+local ValueSpeed = 16
+local OldSpeed = nil
+local V = "V.0.33"
+
+local infoGameName = MarketplaceService:GetProductInfo(game.GameId)
+
+local ESPs = {}
+local Camera = Workspace.CurrentCamera
+local LineESPEnabled = false
+
+local IYMouse = LocalPlayer:GetMouse()
+local FLYING = false
+local QEfly = true
+local iyflyspeed = 1
+local vehicleflyspeed = 1
+local flyKeyDown, flyKeyUp
+
+local PlayerTab = AddTab("Player")
+local EspTab = AddTab("Esp")
+local GameTab = AddTab("Game")
+local BringItemTab = AddTab("Bring Item")
+local DiscordTab = AddTab("Discord")
+local SettingsTab = AddTab("Settings")
+
+local function DragItem(Item)
+    task.spawn(function()
+        for _, tool in pairs(LocalPlayer.Inventory:GetChildren()) do
+            if tool:IsA("Model") and tool:GetAttribute("NumberItems") and tool:GetAttribute("Capacity") and tool:GetAttribute("NumberItems") < tool:GetAttribute("Capacity") then
+                task.spawn(function()
+                    local args = { tool, Item }
+                    ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("RequestBagStoreItem"):InvokeServer(unpack(args))
+                    wait(0.1)
+                end)
+            end
+            wait(0.25)
+        end
+    end)
+end
+
+local function sFLY(vfly)
+    repeat wait() until LocalPlayer and LocalPlayer.Character and LocalPlayer.Character:WaitForChild("HumanoidRootPart") and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    repeat wait() until IYMouse
+    if flyKeyDown or flyKeyUp then flyKeyDown:Disconnect() flyKeyUp:Disconnect() end
+
+    local T = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+    local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+    local lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+    local SPEED = 0
+
+    local function FLY()
+        FLYING = true
+        local BG = Instance.new('BodyGyro')
+        local BV = Instance.new('BodyVelocity')
+        BG.P = 9e4
+        BG.Parent = T
+        BV.Parent = T
+        BG.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        BG.CFrame = T.CFrame
+        BV.Velocity = Vector3.new(0, 0, 0)
+        BV.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        task.spawn(function()
+            repeat wait()
+                if not vfly and LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
+                    LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = true
+                end
+                if CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 or CONTROL.Q + CONTROL.E ~= 0 then
+                    SPEED = 50
+                elseif not (CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 or CONTROL.Q + CONTROL.E ~= 0) and SPEED ~= 0 then
+                    SPEED = 0
+                end
+                if (CONTROL.L + CONTROL.R) ~= 0 or (CONTROL.F + CONTROL.B) ~= 0 or (CONTROL.Q + CONTROL.E) ~= 0 then
+                    BV.Velocity = ((Workspace.CurrentCamera.CoordinateFrame.lookVector * (CONTROL.F + CONTROL.B)) + ((Workspace.CurrentCamera.CoordinateFrame * CFrame.new(CONTROL.L + CONTROL.R, (CONTROL.F + CONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).p) - Workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
+                    lCONTROL = {F = CONTROL.F, B = CONTROL.B, L = CONTROL.L, R = CONTROL.R}
+                elseif (CONTROL.L + CONTROL.R) == 0 and (CONTROL.F + CONTROL.B) == 0 and (CONTROL.Q + CONTROL.E) == 0 and SPEED ~= 0 then
+                    BV.Velocity = ((Workspace.CurrentCamera.CoordinateFrame.lookVector * (lCONTROL.F + lCONTROL.B)) + ((Workspace.CurrentCamera.CoordinateFrame * CFrame.new(lCONTROL.L + lCONTROL.R, (lCONTROL.F + lCONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).p) - Workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
+                else
+                    BV.Velocity = Vector3.new(0, 0, 0)
+                end
+                BG.CFrame = Workspace.CurrentCamera.CoordinateFrame
+            until not FLYING
+            CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+            lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+            SPEED = 0
+            BG:Destroy()
+            BV:Destroy()
+            if LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
+                LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
+            end
+        end)
+    end
+    flyKeyDown = IYMouse.KeyDown:Connect(function(KEY)
+        if KEY:lower() == 'w' then
+            CONTROL.F = (vfly and vehicleflyspeed or iyflyspeed)
+        elseif KEY:lower() == 's' then
+            CONTROL.B = - (vfly and vehicleflyspeed or iyflyspeed)
+        elseif KEY:lower() == 'a' then
+            CONTROL.L = - (vfly and vehicleflyspeed or iyflyspeed)
+        elseif KEY:lower() == 'd' then 
+            CONTROL.R = (vfly and vehicleflyspeed or iyflyspeed)
+        elseif QEfly and KEY:lower() == 'e' then
+            CONTROL.Q = (vfly and vehicleflyspeed or iyflyspeed)*2
+        elseif QEfly and KEY:lower() == 'q' then
+            CONTROL.E = -(vfly and vehicleflyspeed or iyflyspeed)*2
+        end
+        pcall(function() Workspace.CurrentCamera.CameraType = Enum.CameraType.Track end)
+    end)
+    flyKeyUp = IYMouse.KeyUp:Connect(function(KEY)
+        if KEY:lower() == 'w' then
+            CONTROL.F = 0
+        elseif KEY:lower() == 's' then
+            CONTROL.B = 0
+        elseif KEY:lower() == 'a' then
+            CONTROL.L = 0
+        elseif KEY:lower() == 'd' then
+            CONTROL.R = 0
+        elseif KEY:lower() == 'e' then
+            CONTROL.Q = 0
+        elseif KEY:lower() == 'q' then
+            CONTROL.E = 0
+        end
+    end)
+    FLY()
+end
+
+local function NOFLY()
+    FLYING = false
+    if flyKeyDown or flyKeyUp then flyKeyDown:Disconnect() flyKeyUp:Disconnect() end
+    if LocalPlayer.Character:FindFirstChildOfClass('Humanoid') then
+        LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
+    end
+    pcall(function() Workspace.CurrentCamera.CameraType = Enum.CameraType.Custom end)
+end
+
+local velocityHandlerName = "BodyVelocity"
+local gyroHandlerName = "BodyGyro"
+local mfly1, mfly2
+
+local function UnMobileFly()
+    pcall(function()
+        FLYING = false
+        local root = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+        if root:FindFirstChild(velocityHandlerName) then root:FindFirstChild(velocityHandlerName):Destroy() end
+        if root:FindFirstChild(gyroHandlerName) then root:FindFirstChild(gyroHandlerName):Destroy() end
+        LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").PlatformStand = false
+        if mfly1 then mfly1:Disconnect() end
+        if mfly2 then mfly2:Disconnect() end
+    end)
+end
+
+local function MobileFly()
+    UnMobileFly()
+    FLYING = true
+    local root = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+    local camera = Workspace.CurrentCamera
+    local v3none = Vector3.new()
+    local v3zero = Vector3.new(0, 0, 0)
+    local v3inf = Vector3.new(9e9, 9e9, 9e9)
+    local controlModule = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
+    local bv = Instance.new("BodyVelocity")
+    bv.Name = velocityHandlerName
+    bv.Parent = root
+    bv.MaxForce = v3zero
+    bv.Velocity = v3zero
+    local bg = Instance.new("BodyGyro")
+    bg.Name = gyroHandlerName
+    bg.Parent = root
+    bg.MaxTorque = v3inf
+    bg.P = 1000
+    bg.D = 50
+    mfly1 = LocalPlayer.CharacterAdded:Connect(function()
+        local newRoot = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+        local newBv = Instance.new("BodyVelocity")
+        newBv.Name = velocityHandlerName
+        newBv.Parent = newRoot
+        newBv.MaxForce = v3zero
+        newBv.Velocity = v3zero
+        local newBg = Instance.new("BodyGyro")
+        newBg.Name = gyroHandlerName
+        newBg.Parent = newRoot
+        newBg.MaxTorque = v3inf
+        newBg.P = 1000
+        newBg.D = 50
+    end)
+    mfly2 = RunService.RenderStepped:Connect(function()
+        local currentRoot = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+        local currentCamera = Workspace.CurrentCamera
+        if LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") and currentRoot and currentRoot:FindFirstChild(velocityHandlerName) and currentRoot:FindFirstChild(gyroHandlerName) then
+            local humanoid = LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            local VelocityHandler = currentRoot:FindFirstChild(velocityHandlerName)
+            local GyroHandler = currentRoot:FindFirstChild(gyroHandlerName)
+            VelocityHandler.MaxForce = v3inf
+            GyroHandler.MaxTorque = v3inf
+            humanoid.PlatformStand = true
+            GyroHandler.CFrame = currentCamera.CoordinateFrame
+            VelocityHandler.Velocity = v3none
+            local direction = controlModule:GetMoveVector()
+            if direction.X > 0 then
+                VelocityHandler.Velocity = VelocityHandler.Velocity + currentCamera.CFrame.RightVector * (direction.X * ((iyflyspeed) * 50))
+            end
+            if direction.X < 0 then
+                VelocityHandler.Velocity = VelocityHandler.Velocity + currentCamera.CFrame.RightVector * (direction.X * ((iyflyspeed) * 50))
+            end
+            if direction.Z > 0 then
+                VelocityHandler.Velocity = VelocityHandler.Velocity - currentCamera.CFrame.LookVector * (direction.Z * ((iyflyspeed) * 50))
+            end
+            if direction.Z < 0 then
+                VelocityHandler.Velocity = VelocityHandler.Velocity - currentCamera.CFrame.LookVector * (direction.Z * ((iyflyspeed) * 50))
+            end
+        end
+    end)
+end
+
+local function CreateEsp(Char, Color, Text, Parent)
+    if not Char or not Parent then return end
+    if Char:FindFirstChild("ESP") and Char:FindFirstChildOfClass("Highlight") then return end
+    local highlight = Char:FindFirstChildOfClass("Highlight") or Instance.new("Highlight")
+    highlight.Name = "ESP_Highlight"
+    highlight.Adornee = Char
+    highlight.FillColor = Color
+    highlight.FillTransparency = 1
+    highlight.OutlineColor = Color
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Enabled = false
+    highlight.Parent = Char
+    local billboard = Char:FindFirstChild("ESP") or Instance.new("BillboardGui")
+    billboard.Name = "ESP"
+    billboard.Size = UDim2.new(0, 50, 0, 25)
+    billboard.AlwaysOnTop = true
+    billboard.StudsOffset = Vector3.new(0, -2, 0)
+    billboard.Adornee = Parent
+    billboard.Enabled = false
+    billboard.Parent = Parent
+    local label = billboard:FindFirstChildOfClass("TextLabel") or Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = Text
+    label.TextColor3 = Color
+    label.TextScaled = true
+    label.Parent = billboard
+    local line = Drawing.new("Line")
+    line.Visible = false
+    line.Color = Color
+    line.Thickness = 1.5
+    line.Transparency = 1
+    table.insert(ESPs, {
+        Char = Char,
+        Highlight = highlight,
+        Billboard = billboard,
+        Label = label,
+        Part = Parent,
+        Line = line,
+        Text = Text,
+        Color = Color
+    })
+end
+
+local function KeepEsp(Char, Parent)
+    if not Char or not Char:FindFirstChildOfClass("Highlight") then return end
+    if not Parent or not Parent:FindFirstChildOfClass("BillboardGui") then return end
+    for i = #ESPs, 1, -1 do 
+        local esp = ESPs[i]
+        if esp.Char == Char then 
+            if esp.Highlight then esp.Highlight:Destroy() end
+            if esp.Billboard then esp.Billboard:Destroy() end
+            if esp.Line then esp.Line:Destroy() end
+            table.remove(ESPs, i) 
+        end
+    end
+end
+
+local function copyToClipboard(text)
+    if setclipboard then
+        setclipboard(text)
+    else
+        warn("setclipboard is not supported in this environment.")
+    end
+end
+
+AddButton(DiscordTab, "Discord Link", function()
+    copyToClipboard("Indisponível")
+end)
+
+AddToggle(PlayerTab, "Noclip", false, function(state)
+    ActiveNoclip = state
+    if ActiveNoclip then
+        if LocalPlayer.Character then
+            for _, Parts in pairs(LocalPlayer.Character:GetDescendants()) do
+                if Parts:IsA("BasePart") and Parts.CanCollide then
+                    Parts.CanCollide = false
+                end
+            end
+        end
+    else
+        if LocalPlayer.Character then
+            for _, Parts in pairs(LocalPlayer.Character:GetDescendants()) do
+                if Parts:IsA("BasePart") and not Parts.CanCollide then
+                    Parts.CanCollide = true
+                end
+            end
+        end
+    end
+end)
+
+AddToggle(PlayerTab, "Infinite Jump", false, function(state)
+    ActivateInfiniteJump = state
+    if ActivateInfiniteJump then
+        local m = LocalPlayer:GetMouse()
+        m.KeyDown:connect(function(k)
+            if ActivateInfiniteJump then
+                if k:byte() == 32 then
+                    local humanoid = LocalPlayer.Character:FindFirstChildOfClass('Humanoid')
+                    if humanoid then
+                        humanoid:ChangeState('Jumping')
+                        wait()
+                        humanoid:ChangeState('Seated')
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+AddSlider(PlayerTab, "Player Speed", {
+    min = 0,
+    max = 100,
+    value = 16,
+    callback = function(Value)
+        ValueSpeed = Value
+        if ActiveSpeedBoost and LocalPlayer.Character then
+            local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then hum.WalkSpeed = ValueSpeed end
+        end
+    end
+})
+
+AddToggle(PlayerTab, "Active Modifying Player Speed", false, function(state)
+    ActiveSpeedBoost = state
+    task.spawn(function()
+        if not OldSpeed then
+            OldSpeed = LocalPlayer.Character.Humanoid.WalkSpeed
+        end
+    end)
+    if ActiveSpeedBoost then
+        LocalPlayer.Character.Humanoid.WalkSpeed = ValueSpeed
+    else
+        LocalPlayer.Character.Humanoid.WalkSpeed = OldSpeed or 16
+    end
+end)
+
+AddSlider(PlayerTab, "Fly Speed (Recommended to put 1 or below 5!)", {
+    min = 0,
+    max = 10,
+    value = 0,
+    callback = function(Value)
+        iyflyspeed = Value
+    end
+})
+
+AddToggle(PlayerTab, "Fly", false, function(state)
+    ActivateFly = state
+    task.spawn(function()
+        if not FLYING and ActivateFly then
+            if UserInputService.TouchEnabled then
+                MobileFly()
+            else
+                task.spawn(function()
+                    if not AlrActivatedFlyPC then
+                        AlrActivatedFlyPC = true
+                        IceLibrary:Notify("Fly!", "When you enable to fly you can press F to fly/unfly (it won't disable the button!)!", 5)
+                    end
+                end)
+                NOFLY()
+                wait()
+                sFLY()
+            end
+        elseif FLYING and not ActivateFly then
+            if UserInputService.TouchEnabled then
+                UnMobileFly()
+            else
+                NOFLY()
+            end
+        end
+    end)
+end)
+
+AddToggle(PlayerTab, "Instant Prompt", false, function(state)
+    ActiveNoCooldownPrompt = state
+    if ActiveNoCooldownPrompt then
+        for _, Assets in pairs(Workspace:GetDescendants()) do
+            if Assets:IsA("ProximityPrompt") and Assets.HoldDuration ~= 0 then
+                Assets:SetAttribute("HoldDurationOld", Assets.HoldDuration)
+                Assets.HoldDuration = 0
+            end
+        end
+    else
+        for _, Assets in pairs(Workspace:GetDescendants()) do
+            if Assets:IsA("ProximityPrompt") and Assets:GetAttribute("HoldDurationOld") and Assets:GetAttribute("HoldDurationOld") ~= 0 then
+                Assets.HoldDuration = Assets:GetAttribute("HoldDurationOld")
+            end
+        end
+    end
+end)
+
+AddToggle(PlayerTab, "No Fog", false, function(state)
+    ActiveNoFog = state
+    if ActiveNoFog then
+        for _, part in pairs(Workspace.Map.Boundaries:GetChildren()) do
+            if part:IsA("Part") then
+                part:Destroy()
+            end
+        end
+    end
+end)
+
+AddButton(PlayerTab, "TP To Campfire", function()
+    task.spawn(function()
+        LocalPlayer.Character:WaitForChild("HumanoidRootPart").CFrame = Workspace.Map.Campground.MainFire.PrimaryPart.CFrame + Vector3.new(0, 10, 0)
+    end)
+end)
+
+AddToggle(EspTab, "Esp Items", false, function(state)
+    ActiveEspItems = state
+    if ActiveEspItems then
+        for _, Obj in pairs(Workspace.Items:GetChildren()) do
+            if Obj:IsA("Model") and Obj.PrimaryPart and not Obj:FindFirstChildOfClass("Highlight") and not Obj.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+                CreateEsp(Obj, Color3.fromRGB(255, 255, 0), Obj.Name, Obj.PrimaryPart)
+            end
+        end
+    else
+        for _, Obj in pairs(Workspace.Items:GetChildren()) do
+            if Obj:IsA("Model") and Obj.PrimaryPart and Obj:FindFirstChildOfClass("Highlight") and Obj.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+                KeepEsp(Obj, Obj.PrimaryPart)
+            end
+        end
+    end
+end)
+
+AddToggle(EspTab, "Esp Enemy", false, function(state)
+    ActiveEspEnemy = state
+    if ActiveEspEnemy then
+        for _, Obj in pairs(Workspace.Characters:GetChildren()) do
+            if Obj:IsA("Model") and Obj.PrimaryPart and (Obj.Name ~= "Lost Child" and Obj.Name ~= "Lost Child2" and Obj.Name ~= "Lost Child3" and Obj.Name ~= "Lost Child4" and Obj.Name ~= "Pelt Trader") and not Obj:FindFirstChildOfClass("Highlight") and not Obj.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+                CreateEsp(Obj, Color3.fromRGB(255, 0, 0), Obj.Name, Obj.PrimaryPart)
+            end
+        end
+    else
+        for _, Obj in pairs(Workspace.Characters:GetChildren()) do
+            if Obj:IsA("Model") and Obj.PrimaryPart and (Obj.Name ~= "Lost Child" and Obj.Name ~= "Lost Child2" and Obj.Name ~= "Lost Child3" and Obj.Name ~= "Lost Child4" and Obj.Name ~= "Pelt Trader") and Obj:FindFirstChildOfClass("Highlight") and Obj.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+                KeepEsp(Obj, Obj.PrimaryPart)
+            end
+        end
+    end
+end)
+
+AddToggle(EspTab, "Esp Children", false, function(state)
+    ActiveEspChildren = state
+    if ActiveEspChildren then
+        for _, Obj in pairs(Workspace.Characters:GetChildren()) do
+            if Obj:IsA("Model") and Obj.PrimaryPart and (Obj.Name == "Lost Child" or Obj.Name == "Lost Child2" or Obj.Name == "Lost Child3" or Obj.Name == "Lost Child4") and not Obj:FindFirstChildOfClass("Highlight") and not Obj.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+                CreateEsp(Obj, Color3.fromRGB(0, 255, 0), Obj.Name, Obj.PrimaryPart)
+            end
+        end
+    else
+        for _, Obj in pairs(Workspace.Characters:GetChildren()) do
+            if Obj:IsA("Model") and Obj.PrimaryPart and (Obj.Name == "Lost Child" or Obj.Name == "Lost Child2" or Obj.Name == "Lost Child3" or Obj.Name == "Lost Child4") and Obj:FindFirstChildOfClass("Highlight") and Obj.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+                KeepEsp(Obj, Obj.PrimaryPart)
+            end
+        end
+    end
+end)
+
+AddToggle(EspTab, "Esp Pelt Trader", false, function(state)
+    ActiveEspPeltTrader = state
+    if ActiveEspPeltTrader then
+        for _, Obj in pairs(Workspace.Characters:GetChildren()) do
+            if Obj:IsA("Model") and Obj.PrimaryPart and Obj.Name == "Pelt Trader" and not Obj:FindFirstChildOfClass("Highlight") and not Obj.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+                CreateEsp(Obj, Color3.fromRGB(0, 255, 255), Obj.Name, Obj.PrimaryPart)
+            end
+        end
+    else
+        for _, Obj in pairs(Workspace.Characters:GetChildren()) do
+            if Obj:IsA("Model") and Obj.PrimaryPart and Obj.Name == "Pelt Trader" and Obj:FindFirstChildOfClass("Highlight") and Obj.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+                KeepEsp(Obj, Obj.PrimaryPart)
+            end
+        end
+    end
+end)
+
+AddParagraph(GameTab, "Note", "For Auto Chop Tree and kill aura work equip any of axe and it will work!")
+
+AddToggle(GameTab, "Kill Aura", false, function(state)
+    ActiveKillAura = state
+end)
+
+AddSlider(GameTab, "Kill Aura Distance", {
+    min = 25,
+    max = 10000,
+    value = 25,
+    callback = function(Value)
+        DistanceForKillAura = Value
+    end
+})
+
+AddToggle(GameTab, "Auto Chop Tree", false, function(state)
+    ActiveAutoChopTree = state
+end)
+
+AddSlider(GameTab, "Auto Chop Tree Distance", {
+    min = 25,
+    max = 1000,
+    value = 25,
+    callback = function(Value)
+        DistanceForAutoChopTree = Value
+    end
+})
+
+local DoingTheThings = false
+local OldCFrameHere = nil
+local TextBoxText = ""
+local isInTheMap = "no"
+local HowManyItemCanShowUp = 0
+
+local ItemStatusParagraph = AddParagraph(BringItemTab, "Item Status", "Item Is In The Map: No (x0)")
+
+AddTextBox(BringItemTab, {
+    labelText = "Item Name",
+    placeholder = "Put a name only 1 for bring it on you (use the esp for the name)",
+    defaultText = "",
+    textDisappear = false,
+    callback = function(Text)
+        TextBoxText = Text
+        isInTheMap = "no"
+        HowManyItemCanShowUp = 0
+        for _, Obj in pairs(Workspace.Items:GetChildren()) do
+            if Obj.Name == TextBoxText and Obj:IsA("Model") and Obj.PrimaryPart then
+                HowManyItemCanShowUp = HowManyItemCanShowUp + 1
+                isInTheMap = "yes"
+            end
+        end
+        ItemStatusParagraph:Set("Item Is In The Map: " .. isInTheMap .. " (x" .. HowManyItemCanShowUp .. ")")
+    end
+})
+
+local function CreateBringButton(buttonTitle, itemFilter)
+    AddButton(BringItemTab, buttonTitle, function()
+        if DoingTheThings then return end
+        DoingTheThings = true
+        OldCFrameHere = LocalPlayer.Character.HumanoidRootPart.CFrame
+        for _, Obj in pairs(Workspace.Items:GetChildren()) do
+            if itemFilter(Obj) and Obj:IsA("Model") and Obj.PrimaryPart then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = Obj.PrimaryPart.CFrame
+                DragItem(Obj)
+                wait(0.15)
+            end
+        end
+        DoingTheThings = false
+        LocalPlayer.Character.HumanoidRootPart.CFrame = OldCFrameHere
+    end)
+end
+
+CreateBringButton("Bring All Current Items", function(Obj) return true end)
+CreateBringButton("Bring All Logs", function(Obj) return Obj.Name == "Log" end)
+CreateBringButton("Bring All Coal", function(Obj) return Obj.Name == "Coal" end)
+CreateBringButton("Bring All Fuel Canister", function(Obj) return Obj.Name == "Fuel Canister" end)
+CreateBringButton("Bring All Carrots", function(Obj) return Obj.Name == "Carrot" end)
+CreateBringButton("Bring All Fuel", function(Obj) return Obj.Name == "Log" or Obj.Name == "Fuel Canister" or Obj.Name == "Coal" or Obj.Name == "Oil Barrel" end)
+CreateBringButton("Bring All Scraps", function(Obj) return Obj.Name == "Tyre" or Obj.Name == "Sheet Metal" or Obj.Name == "Broken Fan" or Obj.Name == "Bolt" or Obj.Name == "Old Radio" or Obj.Name == "UFO Junk" or Obj.Name == "UFO Scrap" or Obj.Name == "Broken Microwave" end)
+CreateBringButton("Bring All Ammo", function(Obj) return Obj.Name == "Rifle Ammo" or Obj.Name == "Revolver Ammo" end)
+CreateBringButton("Bring All Foods", function(Obj) return Obj.Name == "Cake" or Obj.Name == "Carrot" or Obj.Name == "Morsel" or Obj.Name == "Meat? Sandwich" end)
+CreateBringButton("Bring All Bandages", function(Obj) return Obj.Name == "Bandage" end)
+CreateBringButton("Bring All Medkits", function(Obj) return Obj.Name == "MedKit" end)
+CreateBringButton("Bring All Old Radio", function(Obj) return Obj.Name == "Old Radio" end)
+CreateBringButton("Bring All Tyre", function(Obj) return Obj.Name == "Tyre" end)
+CreateBringButton("Bring All Broken Fan", function(Obj) return Obj.Name == "Broken Fan" end)
+CreateBringButton("Bring All Broken Microwave", function(Obj) return Obj.Name == "Broken Microwave" end)
+CreateBringButton("Bring All Bolt", function(Obj) return Obj.Name == "Bolt" end)
+CreateBringButton("Bring All Metal Sheet", function(Obj) return Obj.Name == "Sheet Metal" end)
+CreateBringButton("Bring All Seed Box", function(Obj) return Obj.Name == "Seed Box" end)
+CreateBringButton("Bring All Chair", function(Obj) return Obj.Name == "Chair" end)
+
+AddButton(BringItemTab, "Bring All Children", function()
+    if DoingTheThings then return end
+    DoingTheThings = true
+    OldCFrameHere = LocalPlayer.Character.HumanoidRootPart.CFrame
+    for _, Obj in pairs(Workspace.Characters:GetChildren()) do
+        if (Obj.Name == "Lost Child" or Obj.Name == "Lost Child2" or Obj.Name == "Lost Child3" or Obj.Name == "Lost Child4") and Obj:IsA("Model") and Obj.PrimaryPart then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = Obj.PrimaryPart.CFrame
+            DragItem(Obj)
+            wait(0.15)
+        end
+    end
+    DoingTheThings = false
+    LocalPlayer.Character.HumanoidRootPart.CFrame = OldCFrameHere
+end)
+
+AddButton(BringItemTab, "Bring All Items With Custom Name", function()
+    if DoingTheThings then return end
+    DoingTheThings = true
+    OldCFrameHere = LocalPlayer.Character.HumanoidRootPart.CFrame
+    for _, Obj in pairs(Workspace.Items:GetChildren()) do
+        if Obj.Name == TextBoxText and Obj:IsA("Model") and Obj.PrimaryPart then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = Obj.PrimaryPart.CFrame
+            DragItem(Obj)
+            wait(0.15)
+        end
+    end
+    DoingTheThings = false
+    LocalPlayer.Character.HumanoidRootPart.CFrame = OldCFrameHere
+end)
+
+AddSlider(SettingsTab, "Limit Range for ESP", {
+    min = 25,
+    max = 1000,
+    value = 100,
+    callback = function(Value)
+        LimitRangerEsp = Value
+    end
+})
+
+AddToggle(SettingsTab, "Disable Limit Range ESP", false, function(state)
+    DisableLimitRangerEsp = state
+end)
+
+AddToggle(SettingsTab, "Activate Distance for ESP", false, function(state)
+    ActiveDistanceEsp = state
+end)
+
+AddToggle(SettingsTab, "Trait for ESP", false, function(state)
+    LineESPEnabled = state
+end)
+
+AddDropdown(SettingsTab, "Change Theme", {"Default", "Light", "RedDark", "BlueNeon", "GreenMatrix", "PurpleDream", "Sunset", "Ocean", "Toxic", "Storm", "LimePop", "Cyber", "Chocolate", "RoseGold", "CottonCandy", "NightSky", "Steel", "GoldLux", "Ice", "TealWave", "FrostFire", "DarkMatter", "Lava", "PinkCandy", "Sakura", "DeepSpace", "Skyline", "Crimson", "Desert", "Camo", "Plasma", "Arctic", "Slate", "Vaporwave"}, function(choice)
+    IceLibrary:SetTheme(choice)
+end)
+
+AddButton(SettingsTab, "Unload Cheat", function()
+end)
+
+RunService.RenderStepped:Connect(function()
+    local cameraPosition = Camera.CFrame.Position
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+
+    task.spawn(function()
+        for _, esp in ipairs(ESPs) do
+            local part = esp.Part
+            local highlight = esp.Highlight
+            local billboard = esp.Billboard
+            local label = esp.Label
+            local line = esp.Line
+            if not part or not highlight or not billboard or not label or not line then return end
+            if part and part.Parent and highlight and billboard then
+                local distance = (cameraPosition - part.Position).Magnitude
+                local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
+                local withinRange = DisableLimitRangerEsp or distance <= LimitRangerEsp
+
+                highlight.Enabled = withinRange and onScreen
+                billboard.Enabled = withinRange and onScreen
+
+                if ActiveDistanceEsp then
+                    label.Text = esp.Text .. " (" .. math.floor(distance + 0.5) .. " m)"
+                else
+                    label.Text = esp.Text
+                end
+
+                if LineESPEnabled then
+                    if onScreen and withinRange then
+                        line.Visible = true
+                        line.From = screenCenter
+                        line.To = Vector2.new(screenPos.X, screenPos.Y)
+                    else
+                        line.Visible = false
+                    end
+                else
+                    line.Visible = false
+                end
+            else
+                if line then line.Visible = false end
+            end
+        end
+    end)
+
+    if ActiveNoclip then
+        if LocalPlayer.Character then
+            for _, Parts in pairs(LocalPlayer.Character:GetDescendants()) do
+                if Parts:IsA("BasePart") and Parts.CanCollide then
+                    Parts.CanCollide = false
+                end
+            end
+        end
+    end
+
+    task.spawn(function()
+        if ActiveAutoChopTree then
+            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local hrp = character:WaitForChild("HumanoidRootPart")
+            local weapon = (LocalPlayer.Inventory:FindFirstChild("Old Axe") or LocalPlayer.Inventory:FindFirstChild("Good Axe") or LocalPlayer.Inventory:FindFirstChild("Strong Axe") or LocalPlayer.Inventory:FindFirstChild("Chainsaw"))
+            
+            for _, bunny in pairs(Workspace.Map.Foliage:GetChildren()) do
+                if bunny:IsA("Model") and (bunny.Name == "Small Tree" or bunny.Name == "TreeBig1" or bunny.Name == "TreeBig2") and bunny.PrimaryPart then
+                    local distance = (bunny.PrimaryPart.Position - hrp.Position).Magnitude
+                    if distance <= DistanceForAutoChopTree then
+                        task.spawn(function()
+                            ReplicatedStorage.RemoteEvents.ToolDamageObject:InvokeServer(bunny, weapon, 999, hrp.CFrame)
+                        end)
+                    end
+                end
+            end
+            for _, bunny in pairs(Workspace.Map.Landmarks:GetChildren()) do
+                if bunny:IsA("Model") and (bunny.Name == "Small Tree" or bunny.Name == "TreeBig1" or bunny.Name == "TreeBig2") and bunny.PrimaryPart then
+                    local distance = (bunny.PrimaryPart.Position - hrp.Position).Magnitude
+                    if distance <= DistanceForAutoChopTree then
+                        task.spawn(function()
+                            ReplicatedStorage.RemoteEvents.ToolDamageObject:InvokeServer(bunny, weapon, 999, hrp.CFrame)
+                        end)
+                    end
+                end
+            end
+        end
+    end)
+
+    task.spawn(function()
+        if ActiveKillAura then
+            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local hrp = character:WaitForChild("HumanoidRootPart")
+            local weapon = (LocalPlayer.Inventory:FindFirstChild("Old Axe") or LocalPlayer.Inventory:FindFirstChild("Good Axe") or LocalPlayer.Inventory:FindFirstChild("Strong Axe") or LocalPlayer.Inventory:FindFirstChild("Chainsaw"))
+
+            for _, bunny in pairs(Workspace.Characters:GetChildren()) do
+                if bunny:IsA("Model") and bunny.PrimaryPart then
+                    local distance = (bunny.PrimaryPart.Position - hrp.Position).Magnitude
+                    if distance <= DistanceForKillAura then
+                        task.spawn(function()
+                            ReplicatedStorage.RemoteEvents.ToolDamageObject:InvokeServer(bunny, weapon, 999, hrp.CFrame)
+                        end)
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+Workspace.DescendantAdded:Connect(function(child)
+    task.wait(0.75)
+    if ActiveNoFog then
+        if child.Parent == Workspace.Map.Boundaries and child:IsA("Part") then
+            child:Destroy()
+        end
+    end
+    if ActiveNoCooldownPrompt then
+        if child:IsA("ProximityPrompt") and child.HoldDuration ~= 0 then
+            child:SetAttribute("HoldDurationOld", child.HoldDuration)
+            child.HoldDuration = 0
+        end
+    end
+    if ActiveEspPeltTrader then
+        if child.Parent == Workspace.Characters and child:IsA("Model") and child.PrimaryPart and child.Name == "Pelt Trader" and not child:FindFirstChildOfClass("Highlight") and not child.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+            CreateEsp(child, Color3.fromRGB(0, 255, 255), child.Name, child.PrimaryPart)
+        end
+    end
+    if ActiveEspChildren then
+        if child.Parent == Workspace.Characters and child:IsA("Model") and child.PrimaryPart and (child.Name == "Lost Child" or child.Name == "Lost Child2" or child.Name == "Lost Child3" or child.Name == "Lost Child4") and not child:FindFirstChildOfClass("Highlight") and not child.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+            CreateEsp(child, Color3.fromRGB(0, 255, 0), child.Name, child.PrimaryPart)
+        end
+    end
+    if ActiveEspItems then
+        if child.Parent == Workspace.Items and child:IsA("Model") and child.PrimaryPart and not child:FindFirstChildOfClass("Highlight") and not child.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+            CreateEsp(child, Color3.fromRGB(255, 255, 0), child.Name, child.PrimaryPart)
+        end
+    end
+    if ActiveEspEnemy then
+        if child.Parent == Workspace.Characters and child:IsA("Model") and child.PrimaryPart and (child.Name ~= "Lost Child" and child.Name ~= "Lost Child2" and child.Name ~= "Lost Child3" and child.Name ~= "Lost Child4" and child.Name ~= "Pelt Trader") and not child:FindFirstChildOfClass("Highlight") and not child.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+            CreateEsp(child, Color3.fromRGB(255, 0, 0), child.Name, child.PrimaryPart)
+        end
+    end
+end)
+
+Workspace.DescendantRemoving:Connect(function(child)
+    if ActiveEspPeltTrader then
+        if child.Parent == Workspace.Characters and child:IsA("Model") and child.PrimaryPart and child.Name == "Pelt Trader" and child:FindFirstChildOfClass("Highlight") and child.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+            KeepEsp(child, child.PrimaryPart)
+        end
+    end
+    if ActiveEspChildren then
+        if child.Parent == Workspace.Characters and child:IsA("Model") and child.PrimaryPart and (child.Name == "Lost Child" or child.Name == "Lost Child2" or child.Name == "Lost Child3" or child.Name == "Lost Child4") and child:FindFirstChildOfClass("Highlight") and child.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+            KeepEsp(child, child.PrimaryPart)
+        end
+    end
+    if ActiveEspItems then
+        if child.Parent == Workspace.Items and child:IsA("Model") and child.PrimaryPart and child:FindFirstChildOfClass("Highlight") and child.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+            KeepEsp(child, child.PrimaryPart)
+        end
+    end
+    if ActiveEspEnemy then
+        if child.Parent == Workspace.Characters and child:IsA("Model") and child.PrimaryPart and not (child.Name == "Lost Child" or child.Name == "Lost Child2" or child.Name == "Lost Child3" or child.Name == "Lost Child4" or child.Name == "Pelt Trader") and child:FindFirstChildOfClass("Highlight") and child.PrimaryPart:FindFirstChildOfClass("BillboardGui") then
+            KeepEsp(child, child.PrimaryPart)
+        end
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == Enum.KeyCode.F then
+        if not FLYING and ActivateFly then
+            if UserInputService.TouchEnabled then
+                MobileFly()
+            else
+                NOFLY()
+                wait()
+                sFLY()
+            end
+        elseif FLYING and ActivateFly then
+            if UserInputService.TouchEnabled then
+                UnMobileFly()
+            else
+                NOFLY()
+            end
+        end
+    end
+end)
+
+local GodMode = false
+local OriginalHealth = nil
+
+AddToggle(PlayerTab, "God Mode", false, function(state)
+    GodMode = state
+    local character = LocalPlayer.Character
+    if character then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        
+        if GodMode then
+            if humanoid then
+                humanoid:SetAttribute("OriginalHealth", humanoid.Health)
+                humanoid.Health = math.huge
+                humanoid.MaxHealth = math.huge
+            end
+            if hrp then
+                local currentPos = hrp.Position
+                hrp.CFrame = CFrame.new(currentPos.X, currentPos.Y + 30, currentPos.Z)
+            end
+            if humanoid then
+                humanoid.PlatformStand = true
+            end
+        else
+            if humanoid then
+                local savedHealth = humanoid:GetAttribute("OriginalHealth") or 100
+                humanoid.Health = savedHealth
+                humanoid.MaxHealth = savedHealth
+                humanoid.PlatformStand = false
+            end
+        end
+    end
+end)
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    task.wait(1)
+    if GodMode then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if humanoid then
+            humanoid.Health = math.huge
+            humanoid.MaxHealth = math.huge
+            humanoid.PlatformStand = true
+        end
+        if hrp then
+            local currentPos = hrp.Position
+            hrp.CFrame = CFrame.new(currentPos.X, currentPos.Y + 30, currentPos.Z)
+        end
+    end
+end)
+
+IceLibrary:Notify("Script Version!", V, 7.5)
