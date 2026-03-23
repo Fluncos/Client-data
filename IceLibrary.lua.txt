@@ -1805,7 +1805,7 @@ function AddSearchBar(tabScrollFrame, placeholder)
     icon.Size = UDim2.new(0, 20, 0, 20)
     icon.Position = UDim2.new(0, 10, 0.5, -10)
     icon.BackgroundTransparency = 1
-    icon.Image = "rbxassetid://10747350736"
+    icon.Image = "rbxassetid://6031154871"
     icon.ScaleType = Enum.ScaleType.Fit
     icon.Parent = holder
     
