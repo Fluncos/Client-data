@@ -1823,35 +1823,62 @@ function AddSearchBar(tabScrollFrame, placeholder)
     searchBox.ClearTextOnFocus = false
     searchBox.Parent = holder
     
-    local allElements = {}
+    local trackedElements = {}
     
-    for _, child in ipairs(tabScrollFrame:GetChildren()) do
-        if child ~= holder and (child:IsA("TextButton") or child:IsA("Frame")) then
-            local labelText = ""
-            local labelObject = child:FindFirstChildWhichIsA("TextLabel")
-            if labelObject and labelObject.Text then
-                labelText = labelObject.Text:lower()
+    local function getElementLabel(element)
+        local labelObject = element:FindFirstChildWhichIsA("TextLabel")
+        if labelObject and labelObject.Text then
+            return labelObject.Text:lower()
+        end
+        return ""
+    end
+    
+    local function updateFilter()
+        local searchText = searchBox.Text:lower()
+        
+        for _, element in ipairs(trackedElements) do
+            if element and element.Parent then
+                local labelText = getElementLabel(element)
+                if searchText == "" then
+                    element.Visible = true
+                elseif labelText:find(searchText, 1, true) then
+                    element.Visible = true
+                else
+                    element.Visible = false
+                end
             end
-            table.insert(allElements, {
-                element = child,
-                label = labelText
-            })
         end
     end
     
-    searchBox:GetPropertyChangedSignal("Text"):Connect(function()
-        local searchText = searchBox.Text:lower()
-        
-        for _, item in ipairs(allElements) do
-            if searchText == "" then
-                item.element.Visible = true
-            elseif item.label:find(searchText, 1, true) then
-                item.element.Visible = true
-            else
-                item.element.Visible = false
+    local function trackElement(element)
+        if element and element ~= holder then
+            if not table.find(trackedElements, element) then
+                table.insert(trackedElements, element)
+                updateFilter()
             end
         end
+    end
+    
+    local function scanForNewElements()
+        for _, child in ipairs(tabScrollFrame:GetChildren()) do
+            if child ~= holder and (child:IsA("TextButton") or child:IsA("Frame")) then
+                if not table.find(trackedElements, child) then
+                    table.insert(trackedElements, child)
+                end
+            end
+        end
+        updateFilter()
+    end
+    
+    tabScrollFrame.ChildAdded:Connect(function(child)
+        if child ~= holder and (child:IsA("TextButton") or child:IsA("Frame")) then
+            trackElement(child)
+        end
     end)
+    
+    searchBox:GetPropertyChangedSignal("Text"):Connect(updateFilter)
+    
+    scanForNewElements()
     
     return searchBox
 end
