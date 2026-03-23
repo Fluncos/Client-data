@@ -1790,7 +1790,6 @@ function AddSlider(tabScrollFrame, labelText, config)
 	return sliderAPI
 end
 
-
 function AddSearchBar(tabScrollFrame, placeholder)
     local holder = Instance.new("Frame")
     holder.Size = UDim2.new(1, 0, 0, 40)
@@ -1827,29 +1826,38 @@ function AddSearchBar(tabScrollFrame, placeholder)
     local originalElements = {}
     local elementLabels = {}
     
-    for _, child in ipairs(tabScrollFrame:GetChildren()) do
-        if child:IsA("TextButton") or child:IsA("Frame") then
-            local labelText = ""
-            local labelObject = child:FindFirstChildWhichIsA("TextLabel")
-            if labelObject then
-                labelText = labelObject.Text
-            end
-            table.insert(originalElements, child)
-            elementLabels[child] = labelText
-        end
-    end
-    
-    searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local function updateFilter()
         local searchText = searchBox.Text:lower()
         
         for _, element in ipairs(originalElements) do
             local labelText = elementLabels[element]:lower()
-            if searchText == "" or labelText:find(searchText) then
+            if searchText == "" or labelText:find(searchText, 1, true) then
                 element.Visible = true
             else
                 element.Visible = false
             end
         end
+    end
+    
+    for _, child in ipairs(tabScrollFrame:GetChildren()) do
+        if child:IsA("TextButton") or child:IsA("Frame") then
+            if child ~= holder then
+                local labelText = ""
+                local labelObject = child:FindFirstChildWhichIsA("TextLabel")
+                if labelObject then
+                    labelText = labelObject.Text
+                end
+                table.insert(originalElements, child)
+                elementLabels[child] = labelText
+            end
+        end
+    end
+    
+    searchBox:GetPropertyChangedSignal("Text"):Connect(updateFilter)
+    updateFilter()
+    
+    searchBox.FocusLost:Connect(function()
+        searchBox:CaptureFocus()
     end)
     
     return searchBox
