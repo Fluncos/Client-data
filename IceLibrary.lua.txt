@@ -1823,41 +1823,34 @@ function AddSearchBar(tabScrollFrame, placeholder)
     searchBox.ClearTextOnFocus = false
     searchBox.Parent = holder
     
-    local originalElements = {}
-    local elementLabels = {}
-    
-    local function updateFilter()
-        local searchText = searchBox.Text:lower()
-        
-        for _, element in ipairs(originalElements) do
-            local labelText = elementLabels[element]:lower()
-            if searchText == "" or labelText:find(searchText, 1, true) then
-                element.Visible = true
-            else
-                element.Visible = false
-            end
-        end
-    end
+    local allElements = {}
     
     for _, child in ipairs(tabScrollFrame:GetChildren()) do
-        if child:IsA("TextButton") or child:IsA("Frame") then
-            if child ~= holder then
-                local labelText = ""
-                local labelObject = child:FindFirstChildWhichIsA("TextLabel")
-                if labelObject then
-                    labelText = labelObject.Text
-                end
-                table.insert(originalElements, child)
-                elementLabels[child] = labelText
+        if child ~= holder and (child:IsA("TextButton") or child:IsA("Frame")) then
+            local labelText = ""
+            local labelObject = child:FindFirstChildWhichIsA("TextLabel")
+            if labelObject and labelObject.Text then
+                labelText = labelObject.Text:lower()
             end
+            table.insert(allElements, {
+                element = child,
+                label = labelText
+            })
         end
     end
     
-    searchBox:GetPropertyChangedSignal("Text"):Connect(updateFilter)
-    updateFilter()
-    
-    searchBox.FocusLost:Connect(function()
-        searchBox:CaptureFocus()
+    searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+        local searchText = searchBox.Text:lower()
+        
+        for _, item in ipairs(allElements) do
+            if searchText == "" then
+                item.element.Visible = true
+            elseif item.label:find(searchText, 1, true) then
+                item.element.Visible = true
+            else
+                item.element.Visible = false
+            end
+        end
     end)
     
     return searchBox
