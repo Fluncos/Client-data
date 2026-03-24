@@ -140,83 +140,9 @@ closeButton.TextSize = 20
 closeButton.Parent = mainFrame
 
 closeButton.MouseButton1Click:Connect(function()
-    local overlay = Instance.new("Frame")
-    overlay.Size = UDim2.new(1, 0, 1, 0)
-    overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    overlay.BackgroundTransparency = 0.5
-    overlay.BorderSizePixel = 0
-    overlay.ZIndex = 20
-    overlay.Parent = screenGui
-    
-    local dialog = Instance.new("Frame")
-    dialog.Size = UDim2.new(0, 300, 0, 150)
-    dialog.Position = UDim2.new(0.5, -150, 0.5, -75)
-    dialog.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    dialog.BorderSizePixel = 0
-    dialog.ZIndex = 21
-    dialog.Parent = overlay
-    
-    local dialogCorner = Instance.new("UICorner")
-    dialogCorner.CornerRadius = UDim.new(0, 8)
-    dialogCorner.Parent = dialog
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, 0, 0, 40)
-    title.Position = UDim2.new(0, 0, 0, 0)
-    title.BackgroundTransparency = 1
-    title.Text = "Fechar Menu"
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.Font = Enum.Font.SourceSans
-    title.TextSize = 18
-    title.Parent = dialog
-    
-    local message = Instance.new("TextLabel")
-    message.Size = UDim2.new(1, -20, 0, 50)
-    message.Position = UDim2.new(0, 10, 0, 40)
-    message.BackgroundTransparency = 1
-    message.Text = "Deseja realmente fechar o menu?"
-    message.TextColor3 = Color3.fromRGB(200, 200, 200)
-    message.Font = Enum.Font.SourceSans
-    message.TextSize = 14
-    message.TextWrapped = true
-    message.Parent = dialog
-    
-    local simBtn = Instance.new("TextButton")
-    simBtn.Size = UDim2.new(0, 120, 0, 35)
-    simBtn.Position = UDim2.new(0.5, -130, 1, -45)
-    simBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    simBtn.Text = "Sim"
-    simBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    simBtn.Font = Enum.Font.SourceSans
-    simBtn.TextSize = 16
-    simBtn.Parent = dialog
-    
-    local simCorner = Instance.new("UICorner")
-    simCorner.CornerRadius = UDim.new(0, 4)
-    simCorner.Parent = simBtn
-    
-    local naoBtn = Instance.new("TextButton")
-    naoBtn.Size = UDim2.new(0, 120, 0, 35)
-    naoBtn.Position = UDim2.new(0.5, 10, 1, -45)
-    naoBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    naoBtn.Text = "Não"
-    naoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    naoBtn.Font = Enum.Font.SourceSans
-    naoBtn.TextSize = 16
-    naoBtn.Parent = dialog
-    
-    local naoCorner = Instance.new("UICorner")
-    naoCorner.CornerRadius = UDim.new(0, 4)
-    naoCorner.Parent = naoBtn
-    
-    simBtn.MouseButton1Click:Connect(function()
-        overlay:Destroy()
-        screenGui:Destroy()
-    end)
-    
-    naoBtn.MouseButton1Click:Connect(function()
-        overlay:Destroy()
-    end)
+
+	mainFrame:Destroy()
+
 end)
 
 local minimizeButton = Instance.new("TextButton")
