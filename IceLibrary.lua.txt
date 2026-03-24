@@ -84,7 +84,6 @@ closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
-return IceLibrary
 
 local minimizeButton = Instance.new("TextButton")
 
