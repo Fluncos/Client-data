@@ -1,149 +1,90 @@
 local IceLibrary = {}
 local Players = game:GetService("Players")
-
 local TweenService = game:GetService("TweenService")
-
 local RunService = game:GetService("RunService")
-
 local UserInputService = game:GetService("UserInputService")
 
-local ContextActionService = game:GetService("ContextActionService")
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local ServerStorage = game:GetService("ServerStorage")
-
-local StarterGui = game:GetService("StarterGui")
-
-local StarterPack = game:GetService("StarterPack")
-
-local StarterPlayer = game:GetService("StarterPlayer")
-
-local SoundService = game:GetService("SoundService")
-
-local Lighting = game:GetService("Lighting")
-
-local TextChatService = game:GetService("TextChatService")
-
-local HttpService = game:GetService("HttpService")
-
-local DataStoreService = game:GetService("DataStoreService")
-
-local MarketplaceService = game:GetService("MarketplaceService")
-
-local BadgeService = game:GetService("BadgeService")
-
-local GroupService = game:GetService("GroupService")
-
-local Teams = game:GetService("Teams")
-
-local Debris = game:GetService("Debris")
-
-local TeleportService = game:GetService("TeleportService")
-
-local PathfindingService = game:GetService("PathfindingService")
-
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
-
-local Workspace = game:GetService("Workspace")
-
-local GuiService = game:GetService("GuiService")
-
-local ProximityPromptService = game:GetService("ProximityPromptService")
-
-local AnalyticsService = game:GetService("AnalyticsService")
-
-local HapticService = game:GetService("HapticService")
-
-local VRService = game:GetService("VRService")
-
-local LocalizationService = game:GetService("LocalizationService")
-
-local PhysicsService = game:GetService("PhysicsService")
-
-local MemoryStoreService = game:GetService("MemoryStoreService")
-
 local LocalPlayer = Players.LocalPlayer
-
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-local player = game:GetService("Players").LocalPlayer
-
-local displayName = player.DisplayName
-
 local screenGui = Instance.new("ScreenGui")
-
 screenGui.Name = "IceLibrary"
-
 screenGui.ResetOnSpawn = false
-
 screenGui.Parent = PlayerGui
 
 local mainFrame = Instance.new("Frame")
-
 mainFrame.Size = UDim2.new(0, 450, 0, 240)
-
 mainFrame.Position = UDim2.new(0.5, -225, 0.5, -120)
-
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-
 mainFrame.Active = true
-
 mainFrame.Draggable = true
-
 mainFrame.ClipsDescendants = true
-
 mainFrame.Parent = screenGui
 
 local corner = Instance.new("UICorner")
-
 corner.CornerRadius = UDim.new(0, 4)
-
 corner.Parent = mainFrame
 
 local titleLabel = Instance.new("TextLabel")
-
 titleLabel.Size = UDim2.new(0, 350, 0, 35)
-
 titleLabel.Position = UDim2.new(0, 10, 0, -2)
-
 titleLabel.BackgroundTransparency = 1
-
 titleLabel.Text = ""
-
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-
 titleLabel.Font = Enum.Font.SourceSans
-
 titleLabel.TextSize = 18
-
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-
 titleLabel.Parent = mainFrame
 
+local fpsLabel = Instance.new("TextLabel")
+fpsLabel.Size = UDim2.new(0, 60, 0, 35)
+fpsLabel.Position = UDim2.new(1, -95, 0, -2)
+fpsLabel.BackgroundTransparency = 1
+fpsLabel.Text = "FPS: 0"
+fpsLabel.Font = Enum.Font.SourceSans
+fpsLabel.TextSize = 14
+fpsLabel.TextXAlignment = Enum.TextXAlignment.Right
+fpsLabel.Parent = mainFrame
+
+local lastTime = tick()
+local frameCount = 0
+
+RunService.RenderStepped:Connect(function()
+    frameCount = frameCount + 1
+    local currentTime = tick()
+    
+    if currentTime - lastTime >= 1 then
+        local fps = frameCount
+        frameCount = 0
+        lastTime = currentTime
+        
+        fpsLabel.Text = "FPS: " .. fps
+        
+        if fps >= 120 then
+            fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+        elseif fps >= 60 then
+            fpsLabel.TextColor3 = Color3.fromRGB(255, 165, 0)
+        else
+            fpsLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        end
+    end
+end)
+
 local closeButton = Instance.new("TextButton")
-
 closeButton.Size = UDim2.new(0, 30, 0, 30)
-
-closeButton.Position = UDim2.new(1, -32, 0, -0)
-
+closeButton.Position = UDim2.new(1, -32, 0, 0)
 closeButton.BackgroundTransparency = 1
-
-closeButton.Text = "x"
-
+closeButton.Text = "X"
 closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-
 closeButton.Font = Enum.Font.SourceSans
-
 closeButton.TextSize = 20
-
 closeButton.Parent = mainFrame
 
 closeButton.MouseButton1Click:Connect(function()
-
-	mainFrame:Destroy()
-
+    screenGui:Destroy()
 end)
+
+return IceLibrary
 
 local minimizeButton = Instance.new("TextButton")
 
