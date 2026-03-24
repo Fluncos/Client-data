@@ -38,7 +38,7 @@ titleLabel.Parent = mainFrame
 
 local fpsLabel = Instance.new("TextLabel")
 fpsLabel.Size = UDim2.new(0, 60, 0, 35)
-fpsLabel.Position = UDim2.new(0, 250, 0, -2)
+fpsLabel.Position = UDim2.new(1, -135, 0, -2)
 fpsLabel.BackgroundTransparency = 1
 fpsLabel.Text = "FPS: 0"
 fpsLabel.Font = Enum.Font.SourceSans
